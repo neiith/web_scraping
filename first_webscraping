@@ -1,0 +1,49 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+from selenium.webdriver import Chrome
+from selenium.webdriver.chrome.service import Service as ChromeService
+import csv
+
+service = ChromeService(r'C:\Users\admin\Desktop\do kursu\chromedriver_win32\chromedriver.exe') # lub ./chromedriver.exe w przypadku Windows
+browser = Chrome(service=service)
+time.sleep(1)
+
+r = requests.get("https://spis.ngo.pl/?search=Fundacja+Medycyny+Prenatalnej+im.+Ernesta+W%C3%B3jcickiego")
+soup = BeautifulSoup(r.text, "html.parser")
+link = soup.find_all("a", class_="no-underline lh-solid bahama-blue underline-child-hover relative z-1 lh-title")
+
+for i in link: 
+    link_foundation = i["href"]
+    print(link_foundation)
+    
+browser.get(link_foundation)
+time.sleep(1)
+main_class = browser.find_element('css selector','.ba.b--light-gray.pa3.pt0')
+show_class = main_class.find_element('css selector','.f7-f6-xl.bb.b--light-gray.flex.flex-wrap.justify-between.pv2')
+decode_show = show_class.find_element('css selector', 'span.underline.bahama-blue.no-underline-hover.pointer')
+decode_show.click()
+
+e_mail = browser.find_element('css selector','.f7-f6-xl.bb.b--light-gray.flex.flex-wrap.justify-between.pv2')
+mail_adress = e_mail.text
+mail1 = mail_adress[7:]
+
+web_site = main_class.find_elements('css selector','span.underline.no-underline-hover')
+sites1 = web_site[1].text
+sites2 = web_site[2].text
+sites1_2 = sites1 + "  " + sites2
+
+tel = main_class.find_elements('css selector','div.tr.grow-1')
+tel2 = tel[1].text
+krs2 = tel[11].text
+regon2 = tel[12].text
+nip2 = tel[13].text
+year2 = tel[14].text
+
+info = [mail1, sites1_2, tel2, krs2, regon2, nip2, year2]
+import pandas as pd
+info_fund = { 'title': ["e_mail", "adres www", "telefon", "KRS", "REGON", "NIP", "Rok założenia"],
+              'content': info}
+df = pd.DataFrame(info_fund, columns = ['title','content'])
+print(df)
+df.to_csv(r'C:\Users\admin\Desktop\CodersLab\fundacja_pożytku_publicznego3.csv', sep=';', index=False)
