@@ -1,0 +1,76 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt 
+import pathlib as Path
+from matplotlib import ticker
+from matplotlib import rcParams
+
+data_path = r'C:\Users\admin\CodersLab - Kurs - Python - Analiza danych\CodersLab_Warsztat\data\processed\job_offers.csv'
+df = pd.read_csv(data_path, sep = ';')
+df.head(2)
+
+# Ile ofert pracy dla poszczególnego stanowiska zostało znalezione?
+df['counter'] = 1
+aa = pd.pivot_table(data=df, index=['job'], columns=["counter"], aggfunc=['count'])
+font1 = {"size": 20}
+explode = (0.05, 0.15, 0.05)
+aa = df.groupby(['job']).sum().plot(
+    kind='pie', y = 'counter',autopct='%1.0f%%', figsize = [10, 8], startangle=60, colors = ["lime", "darkorange", "plum"],
+title = "Oferty pracy dla poszczególnych stanowisk", explode = explode, center = (0, 0), normalize=True)
+aa.legend(title='Job', bbox_to_anchor=(1.2, 0), loc='lower left', fontsize = 'large', title_fontsize = 'large')
+aa.set_title(label = 'Oferty pracy dla poszczególnych stanowisk', fontdict = font1)
+plt.show()
+
+# Jak kształtują się średnie zarobki dla poszczególnych zawodów?
+bb = pd.pivot_table(data=df, index=['job'], columns=['location city'], values = ['salary_avg'], aggfunc=['mean'])
+font1 = {"size": 25,}
+ax = bb.plot(
+     kind='barh', stacked=False, figsize = [10, 10])   #Stacked responsible for visualisation barh
+ax.set_xlabel('Salary of post', fontdict = font1, labelpad = 50)
+ax.set_ylabel('Job', fontdict = font1, labelpad = 50)
+ax.tick_params(axis = 'both', which = 'major', labelsize = 15)
+ax.legend(title='Location city', bbox_to_anchor=(1.2, 0), loc='lower left', fontsize = 'large', title_fontsize = 'large')
+ax.xaxis.grid(True, ls = (0, (1, 10)))
+# shows x-axis in millions instead of scientific notation
+ax.xaxis.set_major_formatter(ticker.EngFormatter())
+ax.set_title(label = 'Wynagrodzenie w miastach', fontdict = font1)
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(False)
+    
+# W którym mieście jest najwięcej ofert pracy?
+cc = pd.pivot_table(data=df, index=['job'], columns=['location city'], values = ['company'], aggfunc=['count'])
+#margins = True, margins_name='Total'
+cc
+color  = ["darkblue", 'blue', 'mediumslateblue', 'thistle', 'blueviolet', 'darkviolet', 'plum', 'hotpink', 'crimson']
+font2 = {"size": 20}
+ax = cc.plot(
+     kind='bar', stacked=True,
+     title='Ogłoszenia w poszczególnych miastach', figsize = [15, 15], color = color)
+plt.rcParams['font.size'] = 18
+ax.invert_xaxis() # put destinations with more passengers on top
+# formatting
+ax.set(xlabel='Ilość ogłoszeń', ylabel='Stanowisko')
+ax.set_xlabel(xlabel='Ilość ogłoszeń', labelpad = 50)
+ax.set_ylabel(ylabel='Stanowisko', labelpad = 50)
+ax.set_title(label = 'Ogłoszenia w poszczególnych miastach', fontdict = font2)
+ax.yaxis.grid(True, ls = (0, (1, 1)))
+#ax.bar_label(container = cc)
+rcParams['axes.titlepad'] = 70 
+#ax.legend(title='location city')
+ax.legend(title='Miejsce pracy', bbox_to_anchor=(1.2, 0), loc='lower left', fontsize = 'xx-small', title_fontsize = 'x-small') 
+
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(False)
+
+for container in ax.containers:
+    tt = ax.bar_label(container, size = 10)
+
+
+# Gdzie jest oferowana najwyższa stawka?
+pd.pivot_table(data=df, index=[], columns=['location city'], values = ['salary high'], aggfunc=['max'])
+# Jaka jest różnica pomiędzy ofertą dla regular'a a seniora?
+pd.pivot_table(data=df, index=['is_senior'], columns=[], values = ['salary_avg'], aggfunc=['max', 'min', 'mean', 'median'])
+# Jaki jest najniższy możliwy koszt zatrudnienia zespołu złożonego z data analyst, data engineer oraz data scientist?
+pd.pivot_table(data=df, index=['job'], columns=[], values = ['salary low'], aggfunc=['min'])
+# Czy istnieje możliwość powołania zespołu w jednym mieście? Jeśli tak to gdzie by było najtaniej?
+pd.pivot_table(data=df, index=['job'], columns=['location city'], values = ['salary low'], aggfunc=['min'])
